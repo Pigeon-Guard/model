@@ -1,0 +1,5 @@
+outs:
+- md5: 218b460f20df8f897deb66d4287f2f12
+  size: 9163083
+  hash: md5
+  path: mobilenet_v2.pth
