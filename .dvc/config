@@ -1,5 +1,6 @@
 [core]
     remote = b2
+    autostage = true
 ['remote "b2"']
     url = s3://pigeon-guard
     endpointurl = https://s3.eu-central-003.backblazeb2.com
