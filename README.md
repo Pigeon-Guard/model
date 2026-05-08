@@ -19,3 +19,5 @@ Pull dataset
 ```bash
 dvc pull 
 ```
+
+Generate labels with [notebook](dataset\generate_txt_labels.ipynb)
