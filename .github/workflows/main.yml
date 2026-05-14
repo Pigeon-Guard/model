@@ -2,19 +2,58 @@ name: Publish Production Model
 
 on:
   repository_dispatch:
-    types: "new-production"
+    types: [new-production]
 
 jobs:
-  test:
+  release:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Print event payload
-        run: |
-          echo "Webhook received"
-          echo "Event type: ${{ github.event.action }}"
-          echo "Payload:"
-          echo "${{ toJson(github.event.client_payload) }}"
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-      - name: Success marker
-        run: echo "Webhook pipeline executed successfully"
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: |
+          pip install wandb
+
+      - name: Download W&B artifact
+        env:
+          WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
+        run: |
+          python - << 'EOF'
+          import os
+          import wandb
+
+          api = wandb.Api()
+
+          artifact_path = "${{ github.event.client_payload.artifact_version }}"
+
+          print("Fetching:", artifact_path)
+
+          artifact = api.artifact(artifact_path)
+          dir_path = artifact.download()
+
+          print("Downloaded to:", dir_path)
+
+          with open("artifact_path.txt", "w") as f:
+              f.write(dir_path)
+          EOF
+
+      - name: Read artifact path
+        id: paths
+        run: echo "dir=$(cat artifact_path.txt)" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: production-${{ github.run_id }}
+          name: Production Model Release
+          files: |
+            ${{ steps.paths.outputs.dir }}/**
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
