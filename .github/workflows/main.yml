@@ -1,0 +1,20 @@
+name: Publish Production Model
+
+on:
+  repository_dispatch:
+    types: "new-production"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Print event payload
+        run: |
+          echo "Webhook received"
+          echo "Event type: ${{ github.event.action }}"
+          echo "Payload:"
+          echo "${{ toJson(github.event.client_payload) }}"
+
+      - name: Success marker
+        run: echo "Webhook pipeline executed successfully"
