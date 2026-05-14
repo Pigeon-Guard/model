@@ -51,9 +51,10 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          token: ${{ secrets.GITHUB_PAT }}
           tag_name: production-${{ github.run_id }}
           name: Production Model Release
           files: |
             ${{ steps.paths.outputs.dir }}/**
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_PAT }}
