@@ -19,14 +19,26 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install wandb
+          pip install wandb ultralytics onnx onnxslim
+
+      - name: Extract artifact version info
+        id: version
+        run: |
+          ARTIFACT="${{ github.event.client_payload.artifact_version }}"
+
+          VERSION=$(echo "$ARTIFACT" | sed 's/.*:v/v/')
+          TAG="yolo-model-${VERSION}"
+          NAME="Model ${VERSION}"
+
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "name=$NAME" >> $GITHUB_OUTPUT
 
       - name: Download W&B artifact
         env:
           WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
         run: |
           python - << 'EOF'
-          import os
           import wandb
 
           api = wandb.Api()
@@ -48,13 +60,34 @@ jobs:
         id: paths
         run: echo "dir=$(cat artifact_path.txt)" >> $GITHUB_OUTPUT
 
+      - name: Rename PyTorch model
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          cp "${{ steps.paths.outputs.dir }}/best.pt" "yolo-model-${VERSION}.pt"
+
+      - name: Export ONNX model
+        run: |
+          python - << 'EOF'
+          from ultralytics import YOLO
+
+          version = "${{ steps.version.outputs.version }}"
+
+          model = YOLO(f"yolo-model-{version}.pt")
+
+          model.export(
+              format="onnx",
+              imgsz=224,
+              opset=11,
+              simplify=True
+          )
+          EOF
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           token: ${{ secrets.GH_PAT }}
-          tag_name: production-${{ github.run_id }}
-          name: Production Model Release
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: ${{ steps.version.outputs.name }}
           files: |
-            ${{ steps.paths.outputs.dir }}/**
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+            yolo-model-${{ steps.version.outputs.version }}.pt
+            yolo-model-${{ steps.version.outputs.version }}.onnx
