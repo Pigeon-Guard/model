@@ -20,21 +20,22 @@ jobs:
         uses: actions/setup-python@v5
 
       - name: Install uv
-        run: |
-          pip install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+            enable-cache: true
 
       - name: Install dependencies with uv
         run: |
-          uv sync
+          uv sync --locked
 
       - name: Pull data with DVC
         run: |
-          dvc pull
+          uv run dvc pull
 
       - name: Generate YOLO txt labels
         run: |
-          python dataset/generate_txt_labels.py
+          uv run python dataset/generate_txt_labels.py
 
       - name: Run training script
         run: |
-          python train.py
+          uv run python train.py
