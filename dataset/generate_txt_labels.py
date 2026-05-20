@@ -39,8 +39,8 @@ def main(json_path, images_root, labels_out):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--json_path", default="labels.json")
-    parser.add_argument("--images_root", default="images")
-    parser.add_argument("--labels_out", default="labels")
+    parser.add_argument("--json_path", default="dataset/labels.json")
+    parser.add_argument("--images_root", default="dataset/images")
+    parser.add_argument("--labels_out", default="dataset/labels")
     args = parser.parse_args()
     main(args.json_path, args.images_root, args.labels_out)
