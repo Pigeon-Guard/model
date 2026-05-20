@@ -1,0 +1,40 @@
+name: Train Model
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  train:
+    runs-on: ubuntu-latest
+    env:
+      WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+
+      - name: Install uv
+        run: |
+          pip install uv
+
+      - name: Install dependencies with uv
+        run: |
+          uv sync
+
+      - name: Pull data with DVC
+        run: |
+          dvc pull
+
+      - name: Generate YOLO txt labels
+        run: |
+          python dataset/generate_txt_labels.py
+
+      - name: Run training script
+        run: |
+          python train.py
