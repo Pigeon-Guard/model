@@ -16,12 +16,13 @@ jobs:
         uses: actions/setup-python@v5
 
       - name: Install uv
-        run: |
-          pip install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+            enable-cache: true
 
       - name: Install dependencies with uv
         run: |
-          uv sync
+          uv sync --locked
 
       - name: Extract artifact version info
         id: version
@@ -40,7 +41,7 @@ jobs:
         env:
           WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
         run: |
-          python - << 'EOF'
+          uv run python - << 'EOF'
           import wandb
 
           api = wandb.Api()
@@ -69,7 +70,7 @@ jobs:
 
       - name: Export ONNX model
         run: |
-          python - << 'EOF'
+          uv run python - << 'EOF'
           from ultralytics import YOLO
 
           version = "${{ steps.version.outputs.version }}"

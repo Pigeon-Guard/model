@@ -38,5 +38,4 @@ jobs:
 
       - name: Run training script
         run: |
-          uv run yolo settings wandb=True
           uv run python train.py
