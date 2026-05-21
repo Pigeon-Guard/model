@@ -10,7 +10,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
-      DVC_MURENA_TOKEN: ${{ secrets.MURENA_TOKEN }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -29,7 +28,8 @@ jobs:
 
       - name: Pull data with DVC
         run: |
-          uv run dvc remote modify --local murena token "$MURENA_TOKEN"
+          uv run dvc remote modify --local origin user marbetschar
+          uv run dvc remote modify --local origin password "${{ secrets.MURENA_TOKEN }}"
           uv run dvc pull
 
       - name: Generate YOLO txt labels
