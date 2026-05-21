@@ -9,13 +9,14 @@ def extract_config(trainer):
     EXTRACTED_CONFIG['run_name'] = trainer.args.name
     EXTRACTED_CONFIG['run_id'] = wandb.run.id
 
-def on_fit_epoch_end(trainer):
+def callback_fit_epoch_end(trainer):
+    run = wandb.run
     epoch = trainer.epoch
     fitness_dict = {}
     if trainer.fitness is not None:
         fitness_dict = {"train/fitness": float(trainer.fitness)}
 
-    wandb.log(
+    run.log(
         {**fitness_dict},
         step=epoch,
     )
@@ -34,8 +35,7 @@ def main(args):
 
     model = YOLO("yolov8n.pt")
 
-    # model.add_callback("on_train_start", extract_config)
-    model.add_callback("on_fit_epoch_end", on_fit_epoch_end)
+    model.add_callback("on_fit_epoch_end", callback_fit_epoch_end)
 
     model.train(data=args.data, epochs=args.epochs, imgsz=args.imgsz)
 
@@ -61,11 +61,10 @@ def main(args):
         new_best = True
 
     if new_best:
-        print("new best")
-        # artifact = wandb_api.artifact(f"pigeon-guard/ultralytics/run_{run.id}_model:best")
-        # artifact.metadata["validation_fitness"] = latest_fitness
-        # artifact.link("wandb-registry-pigeon-guard/yolo-model", aliases=["production"])
-        # artifact.save()
+        artifact = wandb_api.artifact(f"pigeon-guard/ultralytics/run_{run.id}_model:best")
+        artifact.metadata["validation_fitness"] = latest_fitness
+        artifact.link("wandb-registry-pigeon-guard/yolo-model", aliases=["production"])
+        artifact.save()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
