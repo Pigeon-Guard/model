@@ -209,6 +209,7 @@ __marimo__/
 # Models & Ultralytics
 *.pt
 runs/
+wandb/
 
 .idea/
 .DS_Store
