@@ -10,6 +10,12 @@ def extract_config(trainer):
     EXTRACTED_CONFIG['run_id'] = wandb.run.id
 
 def main(args):
+    run = wandb.init(
+        project="ultralytics",
+        name="yolov8n",
+        job_type="train",
+    )
+
     autosplit(
         path="dataset/images",
         weights=(0.8, 0.1, 0.1),
@@ -17,7 +23,7 @@ def main(args):
 
     model = YOLO("yolov8n.pt")
 
-    model.add_callback("on_train_start", extract_config)
+    # model.add_callback("on_train_start", extract_config)
 
     model.train(project="ultralytics", name="yolov8n", data=args.data, epochs=args.epochs, imgsz=args.imgsz)
 
@@ -43,7 +49,7 @@ def main(args):
         new_best = True
 
     if new_best:
-        artifact = wandb_api.artifact(f"pigeon-guard/ultralytics/run_{EXTRACTED_CONFIG['run_id']}_model:best")
+        artifact = wandb_api.artifact(f"pigeon-guard/ultralytics/run_{run.id}_model:best")
         artifact.metadata["validation_fitness"] = latest_fitness
         artifact.link("wandb-registry-pigeon-guard/yolo-model", aliases=["production"])
         artifact.save()
