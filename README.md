@@ -8,11 +8,10 @@ uv venv .venv
 uv sync
 ```
 
-Set credentials in DVC config file
+Set credentials for DVC Murena
 
 ```bash
-AWS_ACCESS_KEY_ID=your-access-key-id
-AWS_SECRET_ACCESS_KEY=your-secret-access-key
+dvc remote modify --local murena token <YOUR-TOKEN>
 ```
 
 Pull dataset
@@ -21,9 +20,19 @@ Pull dataset
 dvc pull 
 ```
 
-Generate labels with [notebook](dataset\generate_txt_labels.ipynb)
+Generate labels for YOLO
 
-Train the yolo model with [notebook](ultralytics_yolo.ipynb)
+```bash
+python dataset/generate_txt_labels.py
+```
+
+Train the yolo model
+
+```bash
+python train.py
+```
+
+To evaluate the latest production model run the notebook [evaluate.ipynb](/evaluate.ipynb)
 
 ## Configuring the Pipeline
 
@@ -68,6 +77,7 @@ The following secrets are required in \<Your Repo\> -> Settings -> Security and 
 
 1. WANDB_API_KEY: Your wandb api login key to be able to fetch the model artifact from wandb.
 2. GH_PAT: The same token created earlier to be able to publish a release when working in an organization.
+3. MURENA_TOKEN: The token used to authenticate to DVC Murena
 
 Important note: the workflow trigger must match the payload:
 ```yaml

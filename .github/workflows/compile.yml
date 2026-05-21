@@ -85,6 +85,49 @@ jobs:
           )
           EOF
 
+      - name: Test ONNX model
+        run: |
+          uv run python - << 'EOF'
+          import numpy as np
+          import onnx
+          import onnxruntime as ort
+
+          version = "${{ steps.version.outputs.version }}"
+          onnx_path = f"yolo-model-{version}.onnx"
+
+          model = onnx.load(onnx_path)
+          onnx.checker.check_model(model)
+
+          sess = ort.InferenceSession(onnx_path, providers=["CPUExecutionProvider"])
+          input0 = sess.get_inputs()[0]
+          name = input0.name
+          shape = list(input0.shape)
+
+          def _dim(i: int, d):
+            if isinstance(d, int) and d > 0:
+              return d
+            if i == 0:
+              return 1
+            if i == 1:
+              return 3
+            return 224
+
+          shape = [_dim(i, d) for i, d in enumerate(shape)]
+          x = np.random.rand(*shape).astype(np.float32)
+
+          outputs = sess.run(None, {name: x})
+          if not outputs:
+            raise RuntimeError("ONNX Runtime returned no outputs")
+          for i, out in enumerate(outputs):
+            arr = np.asarray(out)
+            if arr.size == 0:
+              raise RuntimeError(f"Output {i} is empty")
+            if not np.isfinite(arr).all():
+              raise RuntimeError(f"Output {i} contains non-finite values")
+
+          print("ONNX smoke test OK")
+          EOF
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:

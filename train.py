@@ -45,12 +45,13 @@ def main(args):
 
     model.train(data=args.data, epochs=args.epochs, imgsz=args.imgsz, plots=False)
 
-    metrics = model.val(data=args.data)
+    metrics = model.val(data=args.data, split="test")
     latest_fitness = metrics.results_dict["fitness"]
 
     wandb_api = wandb.Api()
     new_best = False
 
+    # Wait for upload of artifact
     import time
     time.sleep(60)
 
@@ -59,7 +60,7 @@ def main(args):
             "wandb-registry-pigeon-guard/yolo-model:production"
         )
 
-        current_best_fitness = current_best_artifact.metadata.get("best_fitness")
+        current_best_fitness = current_best_artifact.metadata.get("test-fitness", 0)
         print(f"Current best fitness: {current_best_fitness}")
         if latest_fitness >= current_best_fitness:
             new_best = True
@@ -71,7 +72,7 @@ def main(args):
 
     if new_best:
         artifact = wandb_api.artifact(f"pigeon-guard/ultralytics/model-{run.id}:best")
-        artifact.metadata["best_fitness"] = latest_fitness
+        artifact.metadata["test-fitness"] = latest_fitness
         artifact.link("wandb-registry-pigeon-guard/yolo-model", aliases=["production"])
         artifact.save()
         print("Best model updated")
@@ -79,6 +80,6 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--data", default="dataset/data.yaml")
-    parser.add_argument("--epochs", type=int, default=50)
+    parser.add_argument("--epochs", type=int, default=100)
     parser.add_argument("--imgsz", type=int, default=224)
     main(parser.parse_args())
