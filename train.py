@@ -9,6 +9,11 @@ def callback_fit_epoch_end(trainer):
     fitness_dict = {"metrics/fitness": trainer.fitness}
     run.log({**metrics_dict, **fitness_dict})
 
+def callback_train_epoch_end(trainer):
+    run = wandb.run
+    train_dict = {name: value for name, value in trainer.label_loss_items(trainer.tloss).items()}
+    run.log(train_dict)
+
 def callback_train_end(trainer):
     run = wandb.run
     artifact = wandb.Artifact(
@@ -34,6 +39,7 @@ def main(args):
 
     model = YOLO("yolov8n.pt")
 
+    model.add_callback("on_train_epoch_end", callback_train_epoch_end)
     model.add_callback("on_fit_epoch_end", callback_fit_epoch_end)
     model.add_callback("on_train_end", callback_train_end)
 
