@@ -28,8 +28,8 @@ jobs:
 
       - name: Pull data with DVC
         run: |
-          uv run dvc remote modify --local origin user marbetschar
-          uv run dvc remote modify --local origin password "${{ secrets.MURENA_TOKEN }}"
+          uv run dvc remote modify --local murena user marbetschar
+          uv run dvc remote modify --local murena password "${{ secrets.MURENA_TOKEN }}"
           uv run dvc pull
 
       - name: Generate YOLO txt labels
