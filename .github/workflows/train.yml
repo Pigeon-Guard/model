@@ -36,10 +36,7 @@ jobs:
         run: |
           uv run python dataset/generate_txt_labels.py
 
-      - name: Configure YOLO to use wandb
-        run: |
-          uv run yolo settings wandb=True
-
       - name: Run training script
         run: |
+          uv run yolo settings wandb=True
           uv run python train.py
